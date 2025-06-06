@@ -8,6 +8,7 @@ Translated from the original MATLAB code.
 """
 import numpy as np
 from dataclasses import dataclass, field
+import matplotlib.pyplot as plt
 
 @dataclass
 class Physcon:
@@ -239,7 +240,45 @@ def neumann():
         z3_out.append(depth[2] * 100)
         z4_out.append(depth[3] * 100)
     A = np.vstack([iday_out, xf_out, z1_out, t1_out, z2_out, t2_out, z3_out, t3_out, z4_out, t4_out]).T
-    np.savetxt('data_analytical.txt', A, fmt='%10.3f', header=' day       z0C        z1         t1         z2         t2         z3         t3         z4         t4')
+    np.savetxt(
+        'data_analytical.txt',
+        A,
+        fmt='%10.3f',
+        header=' day       z0C     z1         t1         z2         t2         z3         t3         z4  t4'
+    )
+
+
+def plot_results():
+    """Plot the numerical and analytical solutions."""
+
+    numerical = np.loadtxt('data_numerical.txt', skiprows=1)
+    analytical = np.loadtxt('data_analytical.txt', skiprows=1)
+
+    day_num = numerical[:, 0]
+    day_ana = analytical[:, 0]
+
+    fig1, ax1 = plt.subplots()
+    ax1.plot(day_num, numerical[:, 1], label='numerical')
+    ax1.plot(day_ana, analytical[:, 1], '--', label='analytical')
+    ax1.set_xlabel('Day')
+    ax1.set_ylabel("Depth of 0\N{DEGREE CELSIUS} isotherm (cm)")
+    ax1.grid(True)
+    ax1.legend()
+    fig1.tight_layout()
+    fig1.savefig('depth_0C.png')
+
+    fig2, ax2 = plt.subplots()
+    depths = numerical[0, [2, 4, 6, 8]]
+    for i, depth in enumerate(depths):
+        col = 3 + i * 2
+        ax2.plot(day_num, numerical[:, col], label=f'{depth:.0f} cm numerical')
+        ax2.plot(day_ana, analytical[:, col], '--', label=f'{depth:.0f} cm analytical')
+    ax2.set_xlabel('Day')
+    ax2.set_ylabel('Soil temperature (\N{DEGREE CELSIUS})')
+    ax2.grid(True)
+    ax2.legend()
+    fig2.tight_layout()
+    fig2.savefig('temperature_profile.png')
 
 
 def main():
@@ -297,6 +336,7 @@ def main():
     A = np.vstack([iday_out, d0c_out, z1_out, tsoi1_out, z2_out, tsoi2_out, z3_out, tsoi3_out, z4_out, tsoi4_out]).T
     np.savetxt('data_numerical.txt', A, fmt='%10.3f', header=' day       z0C        z1         t1         z2         t2         z3         t3         z4         t4')
     neumann()
+    plot_results()
 
 
 if __name__ == '__main__':
