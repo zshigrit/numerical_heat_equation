@@ -1,3 +1,11 @@
+"""
+Supplemental program 5.3
+
+Use implicit formulation with "excess heat" or "apparent heat capacity" to solve for soil temperatures with phase change in comparison with
+Neumann's analytical solution.
+
+Translated from the original MATLAB code.
+"""
 import numpy as np
 from dataclasses import dataclass, field
 
@@ -54,6 +62,8 @@ class SoilVar:
 
 
 def tridiagonal_solver(a, b, c, d):
+    """Solve the tridiagonal system R * u = d as in the original MATLAB
+    tridiagonal_solver.m routine."""
     n = len(d)
     e = np.zeros(n)
     f = np.zeros(n)
@@ -71,6 +81,9 @@ def tridiagonal_solver(a, b, c, d):
 
 
 def soil_thermal_properties(physcon: Physcon, soilvar: SoilVar) -> SoilVar:
+    """Calculate soil thermal conductivity and heat capacity.
+    This follows the notes in soil_thermal_properties.m.
+    """
     tinc = 0.5
     tku = 1.860
     tkf = 2.324
@@ -97,6 +110,8 @@ def soil_thermal_properties(physcon: Physcon, soilvar: SoilVar) -> SoilVar:
 
 
 def phase_change(physcon: Physcon, soilvar: SoilVar, dt: float) -> SoilVar:
+    """Adjust soil temperature for phase change.
+    Based on phase_change.m where excess or deficit energy is used to freeze or melt ice."""
     soilvar.hfsoi = 0.0
     for i in range(soilvar.nsoi):
         wliq0 = soilvar.h2osoi_liq[i]
@@ -132,6 +147,9 @@ def phase_change(physcon: Physcon, soilvar: SoilVar, dt: float) -> SoilVar:
 
 
 def soil_temperature(physcon: Physcon, soilvar: SoilVar, tsurf: float, dt: float) -> SoilVar:
+    """Use an implicit formulation with the surface temperature boundary to
+    solve for soil temperatures at the next time step. Based on
+    soil_temperature.m from the MATLAB code."""
     tsoi0 = soilvar.tsoi.copy()
     tk_plus_onehalf = np.zeros(soilvar.nsoi - 1)
     for i in range(soilvar.nsoi - 1):
@@ -175,6 +193,7 @@ def soil_temperature(physcon: Physcon, soilvar: SoilVar, tsurf: float, dt: float
 
 
 def neumann():
+    """Analytical solution for the Neumann problem from Lunardini (1981)."""
     nsoi = 4
     depth = np.array([0.25, 0.55, 0.85, 1.15])
     ndays = 60
@@ -224,6 +243,7 @@ def neumann():
 
 
 def main():
+    """Run the numerical solution and compare with the Neumann analytical solution."""
     physcon = Physcon()
     dt = 3600.0
     nday = 60
